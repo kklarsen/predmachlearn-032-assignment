@@ -95,7 +95,7 @@ Following transformation has taken place prior to the training;
 
 ##ANALYSIS.
 
-The `caret` package train with `trainControl` 'method = "cv"` (i.e., cross-validation) and k-folding of `number = 10` (a commonly used number in literature, see [McLachlan] reference below) As `mrty` is not specified the `train` algorithm will suggest accordingly.
+The `caret` package train with `trainControl` `method = "cv"` (i.e., cross-validation) and k-folding of `number = 10` (a commonly used number in literature, see [McLachlan] reference below) As `mrty` is not specified the `train` algorithm will suggest accordingly.
 
 ```{r}
 ## Random forest
@@ -107,7 +107,7 @@ The summary of the resulting model;
 ```{r}
 print(modFit)
 ```
-The resulting accuracy at `mtry = 27` is 98.52%, or an out-of-the-bag error rate of 1.49% (see also below from the `confusion matrix`);
+The resulting accuracy at `mtry = 27` is 98.52%, or an out-of-the-bag error rate of 1.49% (see also below from the **confusion matrix**);
 ```{r}
 print(modFit$finalModel)
 ```

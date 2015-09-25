@@ -137,7 +137,7 @@ subTrain &lt;- subTrain0[inTrain,] #Select p% of training data for training.</co
 </div>
 <div id="analysis." class="section level2">
 <h2>ANALYSIS.</h2>
-<p>The <code>caret</code> package train with <code>trainControl</code> ’method = “cv”<code>(i.e., cross-validation) and k-folding of</code>number = 10<code>(a commonly used number in literature, see [McLachlan] reference below) As</code>mrty<code>is not specified the</code>train` algorithm will suggest accordingly.</p>
+<p>The <code>caret</code> package train with <code>trainControl</code> <code>method = &quot;cv&quot;</code> (i.e., cross-validation) and k-folding of <code>number = 10</code> (a commonly used number in literature, see [McLachlan] reference below) As <code>mrty</code> is not specified the <code>train</code> algorithm will suggest accordingly.</p>
 <pre class="r"><code>## Random forest
 
 modFit &lt;- train(classe ~., data = subTrain, method = &quot;rf&quot;,
@@ -162,7 +162,7 @@ modFit &lt;- train(classe ~., data = subTrain, method = &quot;rf&quot;,
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 27.</code></pre>
-<p>The resulting accuracy at <code>mtry = 27</code> is 98.52%, or an out-of-the-bag error rate of 1.49% (see also below from the <code>confusion matrix</code>);</p>
+<p>The resulting accuracy at <code>mtry = 27</code> is 98.52%, or an out-of-the-bag error rate of 1.49% (see also below from the <strong>confusion matrix</strong>);</p>
 <pre class="r"><code>print(modFit$finalModel)</code></pre>
 <pre><code>## 
 ## Call:
