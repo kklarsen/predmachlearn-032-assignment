@@ -167,7 +167,7 @@ In general an expected test error (or out-of-sample error) can be written as E[e
 
 The Random Forest training error is for the model presented here ca. 1.49%. This is also the out-of-the-bag (OOB) error and should reasonably reflect the out-of-sample error rate. This is of course one of the most important purposes of cross-validation, i.e., provide a very good idea of how the model will generalize to an test dataset (i.e., independent from the choosen training dataset).
 
-Thus, from testing the model on a subset of the training dataset (not used for the actual training of course), the expected out-of-sample error is found to 1.23%. This is in fair agreement with OOB error. Thus for a testing dataset, no more than 1 - 2  classifications errors out 100 are expected to be wrongly classified with the current model.
+Thus, from testing the model on a subset of the training dataset (not used for the actual training of course), the expected out-of-sample error is found to 1.23%. This is in fair agreement with OOB error. Thus for a testing dataset, no more than 1 - 2  classifications out 100 are expected to be wrongly classified with the current model.
 
 ##REFERENCES.
 E. **Velloso** et all, "Qualitative Activity Recognition of Weight Lifting Exercises", Proc. 4th International Conference in Cooperation with SIGCHI, ACM SIGCHI (2013).
