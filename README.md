@@ -1,5 +1,6 @@
 
-#INTRO - MACHINE RECOGNITION OF BARBELL LIFTS 
+#MACHINE RECOGNITION OF BARBELL LIFTS
+#README
 ###predmachlearn-032-assignment
 
 Find the detailed project requirements at the following Coursera page [Project Assignment for Coursera Practical Machine Learning (no. 32).](https://class.coursera.org/predmachlearn-032/human_grading/view/courses/975201/assessments/4/submissions). This also includes links to the training and testing datasets.
