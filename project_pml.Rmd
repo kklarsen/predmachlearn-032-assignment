@@ -1,0 +1,173 @@
+---
+title: "Machine Recognition of Barbell Lifts"
+author: "Dr. Kim Kyllesbech Larsen"
+date: "September 22, 2015"
+output: html_document
+---
+
+##SYNOPSIS
+
+**The goal of this analysis is to create a machine learning model using a set of activity monitors (or measurements) that recoognize the quality in execution of lifting a barbell. The datasets used in this analysis have kindly been provided by Velloso et all. The training dataset, used in the model development, consist of 143 activity monitors, or type of measurements characterizing the execution of lifting a barbell, that fully charecterizes the barbell lift. While several algorithm from the `caret` package have been used, only Random Forest with Cross-Validation `cv` and 10 k-folds will be presented in this paper. The resulting random forest model have an accuracy of 98.52% for an optimal `mtry` of 27 (out of 52 features) and will predict all the 20 test cases provided.**
+
+```{r, message=F, warning=F}
+
+## Libaries
+
+library(caret)
+library(randomForest)
+
+## Functions:
+
+### The following function is copied from the instruction
+### to this Project. This will write 20 text files with
+### with outcome of the prediction of the testing data.
+### note an additional line is added which writes all
+### the predictions into one single text file.
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("./prediction/problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+
+  write.table(x,file="./prediction/all_in_one.txt",quote=FALSE,row.names=FALSE,col.names=FALSE) #Added to provided code.
+}
+
+rm(list = ls()) # clears the global environment
+set.seed(3141593) # Recognize the number? ;-)
+```
+
+##THE DATA.
+
+Two sets of data are provided by [Velloso et all](http://groupware.les.inf.puc-rio.br/har) for this analysis;
+
+1. [Training dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv) with 19,622 observations (i.e., barbell lifts) & 160 variables.
+2. [Testing dataset](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv) with 20 observations (i.e., barbell lifts) and 160 variables (identical to the Training Set with one exception that the categorization variable is unknown).
+
+The first 7 (column) variables of the original datasets are not used in the model (e.g., `X`, `User_name`, `raw_timestamp_part_1`, `raw_timestamp_part_2`, `cvtd_timestamp`, `new_window`, and `num_window`). The last variable `classe` (i.e., the last column #160 in the original datasets) is the consequent measure of how well a barbell lift has been executed. Features as defined between column 8 to column 159 (i.e., original dataset) are the activity monitor resulting from lifting the barbell.
+
+The purpose is to train an appropriate machine learning algorithm on the training dataset (or a part of it) to recognize how well a barbell is lifted as represented by the `classe` variable.
+
+Once an appropriate model for the `classe` has been found by training to the activity monitors (i.e., the features), the model will be used to predict the outcome of 20 different barbell lifts represented by the testing dataset.
+
+**The `classe` variable is defined as follows;**
+
+**A (1)**: Exactly accorsing with specifications.
+
+**B (2)**: Throwing the albows to the front.
+
+**C (3)**: Lifting the dumbbell onlz halfway.
+
+**D (4)**: Lowering the dumbbell only halfway.
+
+**E (5)**: Throwing the hips to the front.
+
+For some models (e.g., `gml`) it is convinient to redefine `classe` from character-based to numerical-based. This is easiest done by `as.numerical(classe)` function, which will map A -> 1, B -> 2, etc..
+
+```{r}
+## assumes that training & testing datasets are placed
+## in the working directory
+
+training = read.csv("pml-training.csv",na.strings=c("NA",""))
+testing = read.csv("pml-testing.csv", na.strings=c("NA",""))
+
+subTrain0 <- training[,8:160] #first 1 to 7 features are irrelevant for `classe`
+subTest <- testing[,8:160]   #first 1 to 7 features are irrelevant for `classe`
+
+domData <- apply(!is.na(subTrain0),2,sum)>19620 #Allowing 2 NA's per feature column
+
+subTrain0 <- subTrain0[,domData] #Ignore features with NA
+subTest <- subTest[,domData]   #Ignore features with NA
+
+inTrain <- createDataPartition(y = subTrain0$classe, p = 0.4, list = FALSE)
+subTrain <- subTrain0[inTrain,] #Select p% of training data for training.
+
+```
+
+Following transformation has taken place prior to the training;
+
+**1.** Subsetting the training & testing dataset ignoring first 7 variable colum leaving 153 feature columns (incl. `classe`)
+**2.** Remove variable columns with more than 2 `NA`s. This last part reduces the amount of feature variables from 153 down to 53 (incl. `classe`).
+**3.** Partition the resulting training (now `subTrain`) dataset to 40% of the original (i.e., from 19,622 -> 7,850). The remainder will be used to check the resulting model. Variation off train data have been carried out for 10%, 20% and 30% as well.
+
+##ANALYSIS.
+
+The `caret` package train with `trainControl` 'method = "cv"` (i.e., cross-validation) and k-folding of `number = 10` (a commonly used number in literature, see [McLachlan] reference below) As `mrty` is not specified the `train` algorithm will suggest accordingly.
+
+```{r}
+## Random forest
+
+modFit <- train(classe ~., data = subTrain, method = "rf",
+                trControl = trainControl(method = "cv", number = 10))
+```
+The summary of the resulting model;
+```{r}
+print(modFit)
+```
+The resulting accuracy at `mtry = 27` is 98.52%, or an out-of-the-bag error rate of 1.49% (see also below from the `confusion matrix`);
+```{r}
+print(modFit$finalModel)
+```
+Using `varImp(modFit)` provide a list of the features ranked by model importance. 
+```{r, fig.width = 8, fig.height = 10}
+
+imps <- varImp(modFit)
+
+p <- plot(imps, main = "Random Forest Model's Variables of Importance", cex = 0.5)
+print(p)
+```
+
+##TESTING.
+```{r}
+## Testing
+## First we select the part of the training dataset not selected
+## for the model training. In order not to confuse with the actual
+## testing dataset, this data is call TestTrain
+
+subTestTrain <- subTrain0[-inTrain,] #care must be taken to choose the right subTrain data.
+
+pred <- predict(modFit, newdata = subTestTrain)
+
+tst1 <- table(pred, subTestTrain$classe)
+tst2 <- confusionMatrix(pred, subTestTrain$classe)
+```
+A proxy-testing dataset has been defined from the provided training dataset. As is clear from above code the proxy-testing data is defined as not to coincide with the data used for training the model. As can be seen from below contingency table (`table(pred, mod)`);
+```{r}
+print(tst1) # testing outcome versus training outcome
+
+out_of_Sample_error <- 1 - sum(diag(tst1))/sum(tst1)
+
+print(out_of_Sample_error)
+```
+with a out-of-sample error of 1.23% slightly better than above but within range of expected and from the `confusionMatrix()`;
+```{r}
+print(tst2)
+```
+The model does recognize very well the resulting barbell lift quality rating (e.g., `classe`) based on the activity features provided.
+
+Of course the ultimate test is to take the **real** testing dataset with 20 test cases and see how that perform. 
+```{r}
+#Finally the prediction on the testing dataset
+
+predFinal <- predict(modFit, newdata = subTest)
+
+print(predFinal)
+
+pml_write_files(predFinal)
+```
+As the `Course Project: Submission` shows this was, as expected, a prediction reflecting the out-of-bag error (or accuracy for that matter) summarized above by `modFit$finalModel`.
+
+##ON ERRORS.
+
+So what kind of errors can we expect for the random forest procedure used above?
+
+In general an expected test error (or out-of-sample error) can be written as E[err(m(x))]= s^2 + Bias[m(x)]^2 + Var[m(x)],m being the model fitted to the training dataset and x a datapoint taken from the testing dataset. s represents the so-called irreducable error (i.e., noise in the data, cant do much about that), Bias is the estimation bias (degree of under-fitting) and Var is the estimation variance (degree of overfitting). Bias is neglectable for Random Forest so we really have to deal with the estimation variance, i.e., the degree of overfitting which likewise should be small in a random forest. algorithm, i.e., E[err(m(x))] ~ s^2 + Var[m(x)]. As for applying cross-validation to the random forest as method, the degree of overfitting (or estimation variance) as chracterized by Var[m(x)] is in general controlled as well.
+
+The Random Forest training error is for the model presented here ca. 1.49%. However, as this is also the out-of-the-bag (OOB) error this already reflect the out-of-sample error rate of the chosen model.This is of course the one of the most important purposes of cross-validation, i.e., provide a very good idea of how the model will generalize to an test dataset (i.e., independent from the choosen training dataset).
+
+Thus, the expected out of sample error is ca. 1.49% for a random forest model subjected to 10-fold cross-validations. Thus for a testing dataset, no more than 2 classifications errors out 100 are expected to be wrongly classified with the current model.
+
+##REFERENCES.
+E. **Velloso** et all, "Qualitative Activity Recognition of Weight Lifting Exercises", Proc. 4th International Conference in Cooperation with SIGCHI, ACM SIGCHI (2013).
+G.J. **McLachlan** et all, "Analyzing microarray gene expression data", Wiley (2004).
