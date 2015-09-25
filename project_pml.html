@@ -70,7 +70,7 @@ img {
 
 <div id="synopsis" class="section level2">
 <h2>SYNOPSIS</h2>
-<p><strong>The goal of this analysis is to create a machine learning model using a set of activity monitors (or measurements) that recoognize the quality in execution of lifting a barbell. The datasets used in this analysis have kindly been provided by Velloso et all. The training dataset, used in the model development, consist of 143 activity monitors, or type of measurements characterizing the execution of lifting a barbell, that fully charecterizes the barbell lift. While several algorithm from the <code>caret</code> package have been used, only Random Forest with Cross-Validation <code>cv</code> and 10 k-folds will be presented in this paper. The resulting random forest model have an accuracy of 98.52% for an optimal <code>mtry</code> of 27 (out of 52 features) and will predict all the 20 test cases provided.</strong></p>
+<p><strong>The goal of this analysis is to create a machine learning model using a set of activity monitors (or measurements) that recoognize the quality in execution of lifting a barbell. The datasets used in this analysis have kindly been provided by Velloso et all. The training dataset, used in the model development, consist of 143 activity monitors, or type of measurements characterizing the execution of lifting a barbell, that fully charecterizes the barbell lift. While several algorithm from the <code>caret</code> package have been used, only Random Forest with 10-fold Cross-Validation <code>cv</code> will be presented in this paper. The resulting random forest model have an accuracy of 98.52% for an optimal <code>mtry</code> of 27 (out of 52 features) and will predict all the 20 test cases provided. The out-of-sample error rate is found to be ca. 1.23%.</strong></p>
 <pre class="r"><code>## Libaries
 
 library(caret)
@@ -87,11 +87,13 @@ library(randomForest)
 pml_write_files = function(x){
   n = length(x)
   for(i in 1:n){
-    filename = paste0(&quot;problem_id_&quot;,i,&quot;.txt&quot;)
+    filename = paste0(&quot;./predictions/problem_id_&quot;,i,&quot;.txt&quot;)
     write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
   }
 
-  write.table(x,file=&quot;all_in_one.txt&quot;,quote=FALSE,row.names=FALSE,col.names=FALSE) #Added to provided code.
+  write.table(x,file=&quot;./predictions/all_in_one.txt&quot;,quote=FALSE,
+              row.names=FALSE,
+              col.names=FALSE) #Added to provided code.
 }
 
 rm(list = ls()) # clears the global environment
@@ -210,7 +212,7 @@ tst2 &lt;- confusionMatrix(pred, subTestTrain$classe)</code></pre>
 
 print(out_of_Sample_error)</code></pre>
 <pre><code>## [1] 0.01231736</code></pre>
-<p>with a out-of-sample error of 1.49% as would have been expected and from the <code>confusionMatrix()</code>;</p>
+<p>with a out-of-sample error of 1.23% slightly better than above but within range of expected and from the <code>confusionMatrix()</code>;</p>
 <pre class="r"><code>print(tst2)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
@@ -258,8 +260,8 @@ print(predFinal)</code></pre>
 <h2>ON ERRORS.</h2>
 <p>So what kind of errors can we expect for the random forest procedure used above?</p>
 <p>In general an expected test error (or out-of-sample error) can be written as E[err(m(x))]= s^2 + Bias[m(x)]^2 + Var[m(x)],m being the model fitted to the training dataset and x a datapoint taken from the testing dataset. s represents the so-called irreducable error (i.e., noise in the data, cant do much about that), Bias is the estimation bias (degree of under-fitting) and Var is the estimation variance (degree of overfitting). Bias is neglectable for Random Forest so we really have to deal with the estimation variance, i.e., the degree of overfitting which likewise should be small in a random forest. algorithm, i.e., E[err(m(x))] ~ s^2 + Var[m(x)]. As for applying cross-validation to the random forest as method, the degree of overfitting (or estimation variance) as chracterized by Var[m(x)] is in general controlled as well.</p>
-<p>The Random Forest training error is for the model presented here ca. 1.49%. However, as this is also the out-of-the-bag (OOB) error this already reflect the out-of-sample error rate of the chosen model.This is of course the one of the most important purposes of cross-validation, i.e., provide a very good idea of how the model will generalize to an test dataset (i.e., independent from the choosen training dataset).</p>
-<p>Thus, the expected out of sample error is ca. 1.49% for a random forest model subjected to 10-fold cross-validations. Thus for a testing dataset, no more than 2 classifications errors out 100 are expected to be wrongly classified with the current model.</p>
+<p>The Random Forest training error is for the model presented here ca. 1.49%. This is also the out-of-the-bag (OOB) error and should reasonably reflect the out-of-sample error rate. This is of course one of the most important purposes of cross-validation, i.e., provide a very good idea of how the model will generalize to an test dataset (i.e., independent from the choosen training dataset).</p>
+<p>Thus, from testing the model on a subset of the training dataset (not used for the actual training of course), the expected out-of-sample error is found to 1.23%. This is in fair agreement with OOB error. Thus for a testing dataset, no more than 1 - 2 classifications errors out 100 are expected to be wrongly classified with the current model.</p>
 </div>
 <div id="references." class="section level2">
 <h2>REFERENCES.</h2>
